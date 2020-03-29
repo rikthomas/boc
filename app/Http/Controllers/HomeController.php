@@ -1,0 +1,97 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use JavaScript;
+use Carbon\Carbon;
+use App\Imports\ReadingsImport;
+use Illuminate\Support\Facades\DB;
+use Maatwebsite\Excel\Facades\Excel;
+
+class HomeController extends Controller
+{
+    public function index()
+    {
+        $readings = DB::select(
+            "SELECT 
+            b1.time AS 'time',
+            b1.volume AS 'ta_volume',
+            ROUND(@ta_usage:=(b2.volume - b1.volume) * 1000,
+                    2) AS 'ta_usage',
+            @minutes:=TIMESTAMPDIFF(MINUTE, b2.time, b1.time) AS 'minutes',
+            @ta_flow:=ROUND(@ta_usage / @minutes) AS 'ta_flow',
+            b3.volume AS 'tb_volume',
+            ROUND(@tb_usage:=(b4.volume - b3.volume) * 1000,
+                    2) AS 'tb_usage',
+            @tb_flow:=ROUND(@tb_usage / @minutes) AS 'tb_flow',
+            @ta_flow + @tb_flow AS 'eng_flow',
+            IF(SIGN(@ta_flow) != 1
+                    AND SIGN(@tb_flow) != 1,
+                NULL,
+                IF(SIGN(@ta_flow) != 1,
+                    @tb_flow,
+                    IF(SIGN(@tb_flow) != 1,
+                        @ta_flow,
+                        @ta_flow + @tb_flow))) AS 'real_flow'
+            FROM
+                (SELECT 
+                    *
+                FROM
+                    tank_a
+                ORDER BY time DESC) b1
+                    INNER JOIN
+                (SELECT 
+                    *
+                FROM
+                    tank_a) b2 ON b2.id = b1.id + 1
+                    INNER JOIN
+                (SELECT 
+                    *
+                FROM
+                    tank_b) b3 ON b1.time = b3.time
+                    INNER JOIN
+                (SELECT 
+                    *
+                FROM
+                    tank_b) b4 ON b4.id = b3.id + 1 "
+        );
+
+        return $readings;
+
+        // JavaScript::put([]);
+
+        // return view('home');
+    }
+
+    public function upload()
+    {
+        $readings = Excel::toArray(new ReadingsImport, storage_path('UCLHNHS.xls'));
+
+        array_shift($readings[0]);
+
+        $assoc_readings = [];
+
+        foreach ($readings[0] as $reading) {
+            $new['tank'] = $reading[1];
+            $new['volume'] = $reading[4];
+            $new['dt'] = $reading[6];
+            array_push($assoc_readings, $new);
+        }
+
+        foreach ($assoc_readings as $reading) {
+            if ($reading['tank'] == '*tank A') {
+                DB::table('tank_a')->insert([
+                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
+                    'volume' => $reading['volume']
+                ]);
+            } else {
+                DB::table('tank_b')->insert([
+                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
+                    'volume' => $reading['volume']
+                ]);
+            }
+        }
+
+        return ('Did it!');
+    }
+}
