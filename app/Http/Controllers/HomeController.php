@@ -70,7 +70,7 @@ class HomeController extends Controller
             'avg_r_result' => array_reverse($avg_r_result)
         ]);
 
-        return view('home');
+        return view('home', compact('readings'));
     }
 
     public function upload()
