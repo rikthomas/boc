@@ -16,3 +16,5 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', 'HomeController@index');
 
 Route::get('/upload', 'HomeController@upload');
+
+Route::get('/data', 'HomeController@data');
