@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Stats;
 use JavaScript;
 use Carbon\Carbon;
 use App\Imports\ReadingsImport;
@@ -56,11 +57,66 @@ class HomeController extends Controller
                     tank_b) b4 ON b4.id = b3.id + 1 "
         );
 
-        return $readings;
+        //return $readings;
 
-        // JavaScript::put([]);
+        $dates = [];
+        $j_results = [];
+        $r_results = [];
+        $temp_j_results = [];
+        $temp_r_results = [];
 
-        // return view('home');
+        $current_date = NULL;
+
+        foreach ($readings as $reading) {
+            $date = Carbon::parse($reading->time)->format('d/m/Y');
+            if (!in_array($date, $dates)) {
+                array_push($dates, $date);
+            }
+            if (is_null($current_date)) {
+                $current_date = $date;
+                array_push($temp_j_results, $reading->eng_flow);
+                array_push($temp_r_results, $reading->real_flow);
+            } elseif ($current_date === $date) {
+                array_push($temp_j_results, $reading->eng_flow);
+                array_push($temp_r_results, $reading->real_flow);
+            } elseif ($current_date != $date) {
+                array_push($j_results, $temp_j_results);
+                array_push($r_results, $temp_r_results);
+                $temp_j_results = [];
+                $temp_r_results = [];
+                $current_date = $date;
+                array_push($temp_j_results, $reading->eng_flow);
+                array_push($temp_r_results, $reading->real_flow);
+            }
+        }
+
+        if (!empty($temp_r_results)) {
+            array_push($temp_j_results, $reading->eng_flow);
+            array_push($temp_r_results, $reading->real_flow);
+            $temp_j_results = [];
+            $temp_r_results = [];
+        }
+
+        $avg_j_result = [];
+        $avg_r_result = [];
+
+        foreach ($j_results as $j_result) {
+            array_push($avg_j_result, round(Stats::mean($j_result)));
+        }
+
+        foreach ($r_results as $r_result) {
+            array_push($avg_r_result, round(Stats::mean($r_result)));
+        }
+
+        //return [$dates, $avg_r_result, $avg_j_result];
+
+        JavaScript::put([
+            'dates' => array_reverse($dates),
+            'avg_j_result' => array_reverse($avg_j_result),
+            'avg_r_result' => array_reverse($avg_r_result)
+        ]);
+
+        return view('home');
     }
 
     public function upload()
