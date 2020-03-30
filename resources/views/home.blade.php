@@ -59,8 +59,13 @@ Highcharts.chart('container', {
     },
     series: [{
         data: avg_r_result,
-        name: 'Average Flow',
-        showInLegend: false
+        name: 'Rik Average Flow',
+        showInLegend: true
+    },
+        {
+        data: avg_j_result,
+        name: 'Chris Average Flow',
+        showInLegend: true  
     }],
 });
 
