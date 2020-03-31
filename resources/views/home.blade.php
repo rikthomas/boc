@@ -2,13 +2,48 @@
 
 @section('content')
 
+<div class="container">  
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" role="dialog">
+      <div class="modal-dialog">
+      
+        <!-- Modal content-->
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title">Instructions</h4>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p>
+                <ul>
+                    <li>Got to <a href = "https://dpc.boc.com/" target="_blank">dpc.boc.com</a></li>
+                    <li>Username is <b>UCLHNHS</b></li>
+                    <li>Password is <b>Oxygen@2</b></li>
+                    <li>Login and click 'Download'</li>
+                    <li>Select a reasonable date range (2 - 3 months)</li>
+                    <li>Check boxes for <b>*tank A and *tank B</b></li>
+                    <li>Download file and drag into tool</li>
+                </ul>
+            </p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+    
+  </div>
+
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-12">
             <div>
-                <h1>UCLH VIE Regulator Flowrate</h1>
+                <h1>UCLH VIE Flowrate Monitoring
+                <button type="button" class="btn btn-info float-right" data-toggle="modal" data-target="#myModal">How to use the tool</button></h1>
             </div>
-            <br><br>
+            <br>
             <div id="container" style="width:100%; height:400px;"></div>
             <br><br>
             <div id="container_time" style="width:100%; height:400px;"></div>
