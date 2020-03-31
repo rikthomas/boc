@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Stats;
+use Validator;
 use JavaScript;
 use Carbon\Carbon;
 use App\Imports\BocImport;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
@@ -17,7 +20,7 @@ class HomeController extends Controller
 
         $dates = $readings->map(function ($reading) {
             return Carbon::parse($reading->time)->format('d/m/y');
-        })->unique()->values()->toArray();
+        })->reverse()->unique()->values()->toArray();
 
         $avg_j_result = $readings->groupBy(function ($reading) {
             return Carbon::parse($reading->time)->format('d/m/y');
@@ -40,9 +43,13 @@ class HomeController extends Controller
         return view('home', compact('readings'));
     }
 
-    public function upload()
+    public function upload(Request $request)
     {
-        Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
+
+        Artisan::call("migrate:rollback");
+        Artisan::call("migrate");
+
+        Excel::import(new BocImport, $request->file);
 
         return redirect('/');
     }
@@ -87,6 +94,6 @@ class HomeController extends Controller
             tank_b b4 ON b4.id = b3.id + 1"
         ))->filter(function ($item) {
             return $item->minutes >= 60;
-        });
+        })->slice(1);
     }
 }
