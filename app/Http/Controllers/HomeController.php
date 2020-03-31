@@ -83,7 +83,7 @@ class HomeController extends Controller
 
     public function data()
     {
-        $readings = $this->readings();
+        $readings = self::readings();
 
         $data = [];
 
@@ -94,9 +94,16 @@ class HomeController extends Controller
         return json_encode(array_reverse($data));
     }
 
+    public function data2()
+    {
+        return self::readings()->map(function ($reading) {
+            return [strtotime($reading->time) * 1000, (float) $reading->real_flow];
+        })->reverse()->values()->toJson();
+    }
+
     public static function readings()
     {
-        $readings = DB::select(
+        return collect(DB::select(
             "SELECT
             b1.time AS 'time',
             b1.volume AS 'ta_volume',
@@ -125,9 +132,7 @@ class HomeController extends Controller
             tank_b b3 ON b1.id = b3.id
                 INNER JOIN
             tank_b b4 ON b4.id = b3.id + 1"
-        );
-
-        return array_filter($readings, function ($item) {
+        ))->filter(function ($item) {
             return $item->minutes >= 60;
         });
     }
