@@ -75,6 +75,7 @@ class HomeController extends Controller
 
     public function upload()
     {
+
         $readings = Excel::toArray(new ReadingsImport, storage_path('UCLHNHS.xls'));
 
         array_shift($readings[0]);
@@ -88,13 +89,15 @@ class HomeController extends Controller
             array_push($assoc_readings, $new);
         }
 
+        // dd($assoc_readings);
+
         foreach ($assoc_readings as $reading) {
-            if ($reading['tank'] == '*tank A') {
+            if ($reading['tank'] === '*tank A') {
                 DB::table('tank_a')->insert([
                     'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
                     'volume' => $reading['volume']
                 ]);
-            } else {
+            } elseif ($reading['tank'] === '*tank B') {
                 DB::table('tank_b')->insert([
                     'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
                     'volume' => $reading['volume']
@@ -102,7 +105,7 @@ class HomeController extends Controller
             }
         }
 
-        return ('Did it!');
+        return redirect('/');
     }
 
     public function data()
@@ -141,27 +144,14 @@ class HomeController extends Controller
                     IF(SIGN(@tb_flow) != 1,
                         @ta_flow,
                         @ta_flow + @tb_flow))) AS 'real_flow'
-            FROM
-                (SELECT 
-                    *
-                FROM
-                    tank_a
-                ORDER BY time DESC) b1
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_a) b2 ON b2.id = b1.id + 1
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_b) b3 ON b1.time = b3.time
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_b) b4 ON b4.id = b3.id + 1 "
+        FROM
+            tank_a b1
+                INNER JOIN
+            tank_a b2 ON b2.id = b1.id + 1
+                INNER JOIN
+            tank_b b3 ON b1.id = b3.id
+                INNER JOIN
+            tank_b b4 ON b4.id = b3.id + 1"
         );
 
         return array_filter($readings, function ($item) {
