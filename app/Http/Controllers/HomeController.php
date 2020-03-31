@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Stats;
 use JavaScript;
 use Carbon\Carbon;
+use App\Imports\BocImport;
 use App\Imports\ReadingsImport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
@@ -75,35 +76,7 @@ class HomeController extends Controller
 
     public function upload()
     {
-
-        $readings = Excel::toArray(new ReadingsImport, storage_path('UCLHNHS.xls'));
-
-        array_shift($readings[0]);
-
-        $assoc_readings = [];
-
-        foreach ($readings[0] as $reading) {
-            $new['tank'] = $reading[1];
-            $new['volume'] = $reading[4];
-            $new['dt'] = $reading[6];
-            array_push($assoc_readings, $new);
-        }
-
-        // dd($assoc_readings);
-
-        foreach ($assoc_readings as $reading) {
-            if ($reading['tank'] === '*tank A') {
-                DB::table('tank_a')->insert([
-                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
-                    'volume' => $reading['volume']
-                ]);
-            } elseif ($reading['tank'] === '*tank B') {
-                DB::table('tank_b')->insert([
-                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
-                    'volume' => $reading['volume']
-                ]);
-            }
-        }
+        Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
 
         return redirect('/');
     }
@@ -124,7 +97,7 @@ class HomeController extends Controller
     public static function readings()
     {
         $readings = DB::select(
-            "SELECT 
+            "SELECT
             b1.time AS 'time',
             b1.volume AS 'ta_volume',
             ROUND(@ta_usage:=(b2.volume - b1.volume) * 1000,
