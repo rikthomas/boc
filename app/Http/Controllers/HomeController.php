@@ -83,19 +83,6 @@ class HomeController extends Controller
 
     public function data()
     {
-        $readings = self::readings();
-
-        $data = [];
-
-        foreach ($readings as $reading) {
-            array_push($data, [strtotime($reading->time) * 1000, (float) $reading->real_flow]);
-        }
-
-        return json_encode(array_reverse($data));
-    }
-
-    public function data2()
-    {
         return self::readings()->map(function ($reading) {
             return [strtotime($reading->time) * 1000, (float) $reading->real_flow];
         })->reverse()->values()->toJson();
