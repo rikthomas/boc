@@ -6,7 +6,6 @@ use App\Stats;
 use JavaScript;
 use Carbon\Carbon;
 use App\Imports\BocImport;
-use App\Imports\ReadingsImport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
