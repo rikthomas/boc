@@ -10,6 +10,8 @@
             </div>
             <br><br>
             <div id="container" style="width:100%; height:400px;"></div>
+            <br><br>
+            <div id="container_time" style="width:100%; height:400px;"></div>
         </div>
     </div>
 </div>
@@ -18,7 +20,7 @@
 
 @push('scripts')
 <script>
-Highcharts.chart('container', {
+    Highcharts.chart('container', {
     chart: {
         type: 'column'
     },
@@ -38,7 +40,7 @@ Highcharts.chart('container', {
     tooltip: {
         headerFormat: '<span style="font-size:10px">{point.key}</span><table>',
         pointFormat: '<tr><td style="color:{series.color};padding:0">{series.name}: </td>' +
-            '<td style="padding:0"><b>{point.y:.1f}L/min</b></td></tr>',
+            '<td style="padding:0"><b>{point.y:.1f} L/min</b></td></tr>',
         footerFormat: '</table>',
         shared: true,
         useHTML: true
@@ -59,16 +61,76 @@ Highcharts.chart('container', {
     },
     series: [{
         data: avg_r_result,
-        name: 'Rik Average Flow',
-        showInLegend: true
-    },
-        {
-        data: avg_j_result,
-        name: 'Chris Average Flow',
-        showInLegend: true  
+        name: 'Average Flow',
+        showInLegend: false
     }],
 });
 
+
+    $.getJSON(
+    '/data',
+    function (data) {
+
+        Highcharts.chart('container_time', {
+            chart: {
+                zoomType: 'x'
+            },
+            title: {
+                text: 'Regulator Flowrate'
+            },
+            subtitle: {
+                text: document.ontouchstart === undefined ?
+                    'Click and drag in the plot area to zoom in' : 'Pinch the chart to zoom in'
+            },
+            xAxis: {
+                type: 'datetime'
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: 'Flow L/min'
+                }
+            },
+            legend: {
+                enabled: false
+            },
+            plotOptions: {
+                area: {
+                    fillColor: {
+                        linearGradient: {
+                            x1: 0,
+                            y1: 0,
+                            x2: 0,
+                            y2: 1
+                        },
+                        stops: [
+                            [0, Highcharts.getOptions().colors[0]],
+                            [1, Highcharts.color(Highcharts.getOptions().colors[0]).setOpacity(0).get('rgba')]
+                        ]
+                    },
+                    marker: {
+                        radius: 2
+                    },
+                    lineWidth: 1,
+                    states: {
+                        hover: {
+                            lineWidth: 1
+                        }
+                    },
+                    threshold: null
+                }
+            },
+            credits: {
+                enabled: false,
+            },
+            series: [{
+                type: 'area',
+                name: 'Flow L/min',
+                data: data
+            }]
+        });
+    }
+);
 </script>
 
 @endpush

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Stats;
 use JavaScript;
 use Carbon\Carbon;
-use App\Imports\ReadingsImport;
+use App\Imports\BocImport;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -13,8 +13,51 @@ class HomeController extends Controller
 {
     public function index()
     {
-        $readings = DB::select(
-            "SELECT 
+        $readings = $this->readings();
+
+        $dates = $readings->map(function ($reading) {
+            return Carbon::parse($reading->time)->format('d/m/y');
+        })->unique()->values()->toArray();
+
+        $avg_j_result = $readings->groupBy(function ($reading) {
+            return Carbon::parse($reading->time)->format('d/m/y');
+        })->map(function ($group) {
+            return round($group->avg('eng_flow'));
+        })->reverse()->values()->toArray();
+
+        $avg_r_result = $readings->groupBy(function ($reading) {
+            return Carbon::parse($reading->time)->format('d/m/y');
+        })->map(function ($group) {
+            return round($group->avg('real_flow'));
+        })->reverse()->values()->toArray();
+
+        JavaScript::put([
+            'dates' => $dates,
+            'avg_j_result' => $avg_j_result,
+            'avg_r_result' => $avg_r_result
+        ]);
+
+        return view('home', compact('readings'));
+    }
+
+    public function upload()
+    {
+        Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
+
+        return redirect('/');
+    }
+
+    public function data()
+    {
+        return self::readings()->map(function ($reading) {
+            return [strtotime($reading->time) * 1000, (float) $reading->real_flow];
+        })->reverse()->values()->toJson();
+    }
+
+    public static function readings()
+    {
+        return collect(DB::select(
+            "SELECT
             b1.time AS 'time',
             b1.volume AS 'ta_volume',
             ROUND(@ta_usage:=(b2.volume - b1.volume) * 1000,
@@ -34,130 +77,16 @@ class HomeController extends Controller
                     IF(SIGN(@tb_flow) != 1,
                         @ta_flow,
                         @ta_flow + @tb_flow))) AS 'real_flow'
-            FROM
-                (SELECT 
-                    *
-                FROM
-                    tank_a
-                ORDER BY time DESC) b1
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_a) b2 ON b2.id = b1.id + 1
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_b) b3 ON b1.time = b3.time
-                    INNER JOIN
-                (SELECT 
-                    *
-                FROM
-                    tank_b) b4 ON b4.id = b3.id + 1 "
-        );
-
-        //return $readings;
-
-        $dates = [];
-        $j_results = [];
-        $r_results = [];
-        $temp_j_results = [];
-        $temp_r_results = [];
-
-        $current_date = false;
-
-        foreach ($readings as $reading) {
-            $date = Carbon::parse($reading->time)->format('d/m/Y');
-            if (!in_array($date, $dates)) {
-                array_push($dates, $date);
-            }
-            if (!$current_date) {
-                array_push($temp_j_results, $reading->eng_flow);
-                array_push($temp_r_results, $reading->real_flow);
-                $current_date = $date;
-            } elseif ($current_date === $date) {
-                array_push($temp_j_results, $reading->eng_flow);
-                array_push($temp_r_results, $reading->real_flow);
-            } elseif ($current_date != $date) {
-                array_push($j_results, $temp_j_results);
-                array_push($r_results, $temp_r_results);
-                $temp_j_results = [];
-                $temp_r_results = [];
-                $current_date = $date;
-                array_push($temp_j_results, $reading->eng_flow);
-                array_push($temp_r_results, $reading->real_flow);
-            }
-        }
-
-        if (!empty($temp_r_results)) {
-            array_push($j_results, $temp_j_results);
-            array_push($r_results, $temp_r_results);
-            $temp_j_results = [];
-            $temp_r_results = [];
-        }
-
-        $avg_j_result = [];
-        $avg_r_result = [];
-
-        foreach ($j_results as $j_result) {
-            array_push($avg_j_result, round(Stats::mean($j_result)));
-        }
-
-        foreach ($r_results as $r_result) {
-            array_push($avg_r_result, round(Stats::mean($r_result)));
-        }
-
-        // return $readings;
-
-        // return [$dates, $avg_r_result, $avg_j_result];
-
-        // return [count($dates), count($avg_r_result), count($avg_j_result)];
-
-        JavaScript::put([
-            'dates' => array_reverse($dates),
-            'avg_j_result' => array_reverse($avg_j_result),
-            'avg_r_result' => array_reverse($avg_r_result)
-        ]);
-
-        // JavaScript::put([
-        //     'dates' => $dates,
-        //     'avg_j_result' => $avg_j_result,
-        //     'avg_r_result' => $avg_r_result
-        // ]);
-
-        return view('home');
-    }
-
-    public function upload()
-    {
-        $readings = Excel::toArray(new ReadingsImport, storage_path('UCLHNHS.xls'));
-
-        array_shift($readings[0]);
-
-        $assoc_readings = [];
-
-        foreach ($readings[0] as $reading) {
-            $new['tank'] = $reading[1];
-            $new['volume'] = $reading[4];
-            $new['dt'] = $reading[6];
-            array_push($assoc_readings, $new);
-        }
-
-        foreach ($assoc_readings as $reading) {
-            if ($reading['tank'] == '*tank A') {
-                DB::table('tank_a')->insert([
-                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
-                    'volume' => $reading['volume']
-                ]);
-            } else {
-                DB::table('tank_b')->insert([
-                    'time' => Carbon::parse($reading['dt'])->format('Y-m-d H:i:s'),
-                    'volume' => $reading['volume']
-                ]);
-            }
-        }
-
-        return ('Did it!');
+        FROM
+            tank_a b1
+                INNER JOIN
+            tank_a b2 ON b2.id = b1.id + 1
+                INNER JOIN
+            tank_b b3 ON b1.id = b3.id
+                INNER JOIN
+            tank_b b4 ON b4.id = b3.id + 1"
+        ))->filter(function ($item) {
+            return $item->minutes >= 60;
+        });
     }
 }
