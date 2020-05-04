@@ -102,7 +102,7 @@ class HomeController extends Controller
         Artisan::call("migrate:rollback");
         Artisan::call("migrate");
 
-        Excel::import(new BocImport, 'UCLHNHS.xls');
+        Excel::import(new BocImport, public_path('UCLHNHS.xls'));
 
         return redirect('/');
     }
