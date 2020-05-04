@@ -104,8 +104,6 @@ class HomeController extends Controller
 
         Excel::import(new BocImport, 'UCLHNHS.xls');
 
-        unlink('UCLHNHS.xls');
-
         return redirect('/');
     }
 }
