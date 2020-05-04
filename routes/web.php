@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,3 +19,5 @@ Route::get('/', 'HomeController@index');
 Route::post('/upload', 'HomeController@upload');
 
 Route::get('/data', 'HomeController@data');
+
+Route::get('/rpa', 'HomeController@rpa');
