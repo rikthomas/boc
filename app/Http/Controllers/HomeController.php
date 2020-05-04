@@ -10,7 +10,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
-use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
@@ -95,15 +94,5 @@ class HomeController extends Controller
         ))->filter(function ($item) {
             return $item->minutes >= 60;
         })->slice(1);
-    }
-
-    public function rpa()
-    {
-        Artisan::call("migrate:rollback");
-        Artisan::call("migrate");
-
-        Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
-
-        return redirect('/');
     }
 }

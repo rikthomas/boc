@@ -16,7 +16,8 @@
           <div class="modal-body">
             <p>
                 <ul>
-                    <li>Got to <a href = "https://dpc.boc.com/" target="_blank">dpc.boc.com</a></li>
+                    <li>This now uses a <a href = "https://github.com/kelaberetiv/TagUI" Target="_blank">TagUI Script</a> to update daily at 0700</li>
+                    <li>If you want to pull a different time period got to <a href = "https://dpc.boc.com/" target="_blank">dpc.boc.com</a></li>
                     <li>Username is <b>UCLHNHS</b></li>
                     <li>Password is <b>Oxygen@2</b></li>
                     <li>Login and click 'Download'</li>
