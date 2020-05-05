@@ -95,4 +95,12 @@ class HomeController extends Controller
             return $item->minutes >= 60;
         })->slice(1);
     }
+
+    public function rpa()
+    {
+        Artisan::call("migrate:rollback");
+        Artisan::call("migrate");
+        Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
+        return redirect('/');
+    }
 }
