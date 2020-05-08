@@ -171,8 +171,8 @@ Highcharts.chart('container_nhnn', {
 
 
     $.getJSON(
-    //'/vie/current/public/data',
-    '/data',
+    '/vie/current/public/data',
+    //'/data',
     function (data) {
 
         Highcharts.chart('container_time', {
@@ -237,8 +237,8 @@ Highcharts.chart('container_nhnn', {
 );
 
 $.getJSON(
-    //'/vie/current/public/data_nhnn',
-    '/data_nhnn',
+    '/vie/current/public/data_nhnn',
+    //'/data_nhnn',
     function (data) {
 
         Highcharts.chart('container_time_nhnn', {
