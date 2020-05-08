@@ -53,7 +53,7 @@
             <br><br>
             <div id="container_time_nhnn" style="width:100%; height:400px;"></div>
             <br><br>
-            <form action="/upload" method="POST" enctype="multipart/form-data" class="dropzone" id="dzupload">
+            <form action="/vie/current/public/upload" method="POST" enctype="multipart/form-data" class="dropzone" id="dzupload">
                 <div class="dz-message" data-dz-message><span>Drop BOC export here or click for manual upload</span></div>
                 {{ csrf_field() }}
             </form>
