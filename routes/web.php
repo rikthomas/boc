@@ -21,3 +21,5 @@ Route::post('/upload', 'HomeController@upload');
 Route::get('/data', 'HomeController@data');
 
 Route::get('/rpa', 'HomeController@rpa');
+
+Route::get('/data_nhnn', 'HomeController@data_nhnn');

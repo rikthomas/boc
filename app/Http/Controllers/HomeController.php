@@ -17,26 +17,33 @@ class HomeController extends Controller
     {
         $readings = $this->readings();
 
-        $dates = $readings->map(function ($reading) {
+        $dates = $readings[0]->map(function ($reading) {
             return Carbon::parse($reading->time)->format('d/m/y');
         })->reverse()->unique()->values()->toArray();
 
-        $avg_j_result = $readings->groupBy(function ($reading) {
+        $avg_j_result = $readings[0]->groupBy(function ($reading) {
             return Carbon::parse($reading->time)->format('d/m/y');
         })->map(function ($group) {
             return round($group->avg('eng_flow'));
         })->reverse()->values()->toArray();
 
-        $avg_r_result = $readings->groupBy(function ($reading) {
+        $avg_r_result = $readings[0]->groupBy(function ($reading) {
             return Carbon::parse($reading->time)->format('d/m/y');
         })->map(function ($group) {
             return round($group->avg('real_flow'));
         })->reverse()->values()->toArray();
 
+        $avg_nhnn_result = $readings[1]->groupBy(function ($reading) {
+            return Carbon::parse($reading->time)->format('d/m/y');
+        })->map(function ($group) {
+            return round($group->avg('flow'));
+        })->reverse()->values()->toArray();
+
         JavaScript::put([
             'dates' => $dates,
             'avg_j_result' => $avg_j_result,
-            'avg_r_result' => $avg_r_result
+            'avg_r_result' => $avg_r_result,
+            'avg_nhnn_result' => $avg_nhnn_result
         ]);
 
         return view('home', compact('readings'));
@@ -55,14 +62,21 @@ class HomeController extends Controller
 
     public function data()
     {
-        return self::readings()->map(function ($reading) {
+        return self::readings()[0]->map(function ($reading) {
             return [strtotime($reading->time) * 1000, (float) $reading->real_flow];
+        })->reverse()->values()->toJson();
+    }
+
+    public function data_nhnn()
+    {
+        return self::readings()[1]->map(function ($reading) {
+            return [strtotime($reading->time) * 1000, (float) $reading->flow];
         })->reverse()->values()->toJson();
     }
 
     public static function readings()
     {
-        return collect(DB::select(
+        $main_tank = collect(DB::select(
             "SELECT
             b1.time AS 'time',
             b1.volume AS 'ta_volume',
@@ -94,6 +108,24 @@ class HomeController extends Controller
         ))->filter(function ($item) {
             return $item->minutes >= 60;
         })->slice(1);
+
+        $nhnn = collect(DB::select(
+            "SELECT 
+            b1.time AS 'time',
+            b1.volume AS 'volume',
+            ROUND(@ta_usage:=(b2.volume - b1.volume) * 1000,
+                    2) AS 'usage',
+            @minutes:=TIMESTAMPDIFF(MINUTE, b2.time, b1.time) AS 'minutes',
+            @ta_flow:=ROUND(@ta_usage / @minutes) AS 'flow'
+        FROM
+            nhnn b1
+                INNER JOIN
+            nhnn b2 ON b2.id = b1.id + 1"
+        ))->filter(function ($item) {
+            return $item->flow > 0 && $item->minutes >= 60;
+        })->slice(1);
+
+        return [$main_tank, $nhnn];
     }
 
     public function rpa()
