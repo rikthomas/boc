@@ -16,7 +16,7 @@
           <div class="modal-body">
             <p>
                 <ul>
-                    <li>This dashboard now to updates daily at 0700 with readings from the previous 30 days</li>
+                    <li>This dashboard updates daily at 0700 with readings from the previous 30 days</li>
                     <li>If you want to pull a different time period got to <a href = "https://dpc.boc.com/" target="_blank">dpc.boc.com</a></li>
                     <li>Username is <b>UCLHNHS</b></li>
                     <li>Password is <b>Oxygen@2</b></li>
