@@ -4,7 +4,7 @@
 
 <h3>UCH Summary</h3>
 
-<table cellpadding="0" cellspacing="0" width="640" border="1">
+<table cellpadding="0" cellspacing="0" width="740" border="1">
     <tr>
         <th>Date</th>
         <th>Oxygen Usage (L/min)</th>
@@ -23,7 +23,7 @@
 
 <h3>NHNN Summary</h3>
 
-<table cellpadding="0" cellspacing="0" width="640" border="1">
+<table cellpadding="0" cellspacing="0" width="740" border="1">
     <tr>
         <th>Date</th>
         <th>Oxygen Usage (L/min)</th>
