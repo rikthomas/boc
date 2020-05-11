@@ -199,7 +199,5 @@ class HomeController extends Controller
         $data = ['uch' => $uch_data, 'nhnn' => $nhnn_data];
 
         Mail::to(config('recipients.emails'))->send(new DailyEmail($data));
-
-        return 'Sent!';
     }
 }
