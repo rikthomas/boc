@@ -1,12 +1,3 @@
-@component('mail::message')
-# Introduction
+<h2>Daily Oxygen Usage Report - UCH and NHNN Site</h2>
 
-The body of your message.
-
-@component('mail::button', ['url' => ''])
-Button Text
-@endcomponent
-
-Thanks,<br>
-{{ config('app.name') }}
-@endcomponent
+{{$data['uch'][0]['date']}}

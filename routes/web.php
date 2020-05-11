@@ -24,6 +24,8 @@ Route::get('/rpa', 'HomeController@rpa');
 
 Route::get('/data_nhnn', 'HomeController@data_nhnn');
 
-Route::get('/email', function () {
-    return new App\Mail\DailyEmail();
-});
+// Route::get('/email', function () {
+//     return new App\Mail\DailyEmail();
+// });
+
+Route::get('/email', 'HomeController@daily_email');

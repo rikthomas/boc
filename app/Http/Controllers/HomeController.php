@@ -5,15 +5,32 @@ namespace App\Http\Controllers;
 use Validator;
 use JavaScript;
 use Carbon\Carbon;
+use App\Mail\DailyEmail;
 use App\Imports\BocImport;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Artisan;
 
 class HomeController extends Controller
 {
     public function index()
+    {
+        $data = $this->parse_readings();
+
+        $readings = $data['readings'];
+
+        JavaScript::put([
+            'dates' => $data['dates'],
+            'avg_j_result' => $data['avg_j_result'],
+            'avg_r_result' => $data['avg_r_result'],
+            'avg_nhnn_result' => $data['avg_nhnn_result']
+        ]);
+
+        return view('home', compact('readings'));
+    }
+
+    public function parse_readings()
     {
         $readings = $this->readings();
 
@@ -39,14 +56,7 @@ class HomeController extends Controller
             return round($group->avg('flow'));
         })->reverse()->values()->toArray();
 
-        JavaScript::put([
-            'dates' => $dates,
-            'avg_j_result' => $avg_j_result,
-            'avg_r_result' => $avg_r_result,
-            'avg_nhnn_result' => $avg_nhnn_result
-        ]);
-
-        return view('home', compact('readings'));
+        return ['readings' => $readings, 'dates' => $dates, 'avg_j_result' => $avg_j_result, 'avg_r_result' => $avg_r_result, 'avg_nhnn_result' => $avg_nhnn_result];
     }
 
     public function upload(Request $request)
@@ -134,5 +144,63 @@ class HomeController extends Controller
         Artisan::call("migrate");
         Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
         return redirect('/');
+    }
+
+    public function daily_email()
+    {
+        $readings = $this->parse_readings();
+
+        $dates = array_slice($readings['dates'], -6, 6);
+        $uch = array_slice($readings['avg_r_result'], -6, 6);
+        $nhnn = array_slice($readings['avg_nhnn_result'], -6, 6);
+
+        $dates_format = array_map(function ($value) {
+            return Carbon::createFromFormat('d/m/Y', $value)->format('jS M');
+        }, $dates);
+
+        $uch_limit = array_map(function ($value) {
+            return round($value / 50);
+        }, $uch);
+
+        $nhnn_limit = array_map(function ($value) {
+            return round($value / 30);
+        }, $nhnn);
+
+        $uch_change = [];
+
+        $nhnn_change = [];
+
+        for ($x = 1; $x < 6; $x++) {
+            array_push($uch_change, round((($uch[$x] - $uch[$x - 1]) / 50), 1));
+        }
+
+        for ($x = 1; $x < 6; $x++) {
+            array_push($nhnn_change, round((($nhnn[$x] - $nhnn[$x - 1]) / 30), 1));
+        }
+
+        array_shift($dates_format);
+        array_shift($uch);
+        array_shift($nhnn);
+        array_shift($uch_limit);
+        array_shift($nhnn_limit);
+
+        //dd($dates, $dates_format, $uch, $nhnn, $uch_limit, $nhnn_limit, $uch_change, $nhnn_change);
+
+        $uch_data = [];
+        $nhnn_data = [];
+
+        foreach ($dates_format as $key => $value) {
+            array_push($uch_data, ['date' => $value, 'reading' => $uch[$key], 'limit' => $uch_limit[$key], 'change' => $uch_change[$key]]);
+        }
+
+        foreach ($dates_format as $key => $value) {
+            array_push($nhnn_data, ['date' => $value, 'reading' => $nhnn[$key], 'limit' => $nhnn_limit[$key], 'change' => $nhnn_change[$key]]);
+        }
+
+        $data = ['uch' => $uch_data, 'nhnn' => $nhnn_data];
+
+        dd($data);
+
+        return new DailyEmail($data);
     }
 }
