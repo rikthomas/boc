@@ -34,7 +34,7 @@ class Kernel extends ConsoleKernel
             Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
         })->dailyAt('7:00');
 
-        $schedule->call('App\Http\Controllers\HomeController@DailyEmail')->everyMinute();
+        $schedule->call('App\Http\Controllers\HomeController@DailyEmail')->dailyAt('8:00');
     }
 
     /**
