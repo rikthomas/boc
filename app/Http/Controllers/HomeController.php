@@ -9,6 +9,7 @@ use App\Mail\DailyEmail;
 use App\Imports\BocImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Artisan;
 
@@ -184,8 +185,6 @@ class HomeController extends Controller
         array_shift($uch_limit);
         array_shift($nhnn_limit);
 
-        //dd($dates, $dates_format, $uch, $nhnn, $uch_limit, $nhnn_limit, $uch_change, $nhnn_change);
-
         $uch_data = [];
         $nhnn_data = [];
 
@@ -199,8 +198,8 @@ class HomeController extends Controller
 
         $data = ['uch' => $uch_data, 'nhnn' => $nhnn_data];
 
-        dd($data);
+        Mail::to(config('recipients.emails'))->send(new DailyEmail($data));
 
-        return new DailyEmail($data);
+        return 'Sent!';
     }
 }
