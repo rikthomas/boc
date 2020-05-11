@@ -3,6 +3,7 @@
 namespace App\Console;
 
 use App\Imports\BocImport;
+use App\Mail\DailyEmail;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Console\Scheduling\Schedule;
@@ -27,12 +28,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
         $schedule->call(function () {
             Artisan::call("migrate:rollback");
             Artisan::call("migrate");
             Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
         })->dailyAt('7:00');
+
+        $schedule->call('App\Http\Controllers\HomeController@DailyEmail')->everyMinute();
     }
 
     /**

@@ -147,7 +147,7 @@ class HomeController extends Controller
         return redirect('/');
     }
 
-    public function daily_email()
+    public function DailyEmail()
     {
         $readings = $this->parse_readings();
 
@@ -198,6 +198,10 @@ class HomeController extends Controller
 
         $data = ['uch' => $uch_data, 'nhnn' => $nhnn_data];
 
-        Mail::to(config('recipients.emails'))->send(new DailyEmail($data));
+        if (Carbon::now()->subDays(1)->format('d/m/y') === end($dates)) {
+            Mail::to(config('recipients.emails'))->send(new DailyEmail($data));
+        } else {
+            return ('No BOC Update');
+        }
     }
 }
