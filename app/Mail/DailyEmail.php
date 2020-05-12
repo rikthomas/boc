@@ -29,6 +29,6 @@ class DailyEmail extends Mailable
      */
     public function build()
     {
-        return $this->view('dailyemail');
+        return $this->subject('Daily Oxygen Report')->view('dailyemail');
     }
 }
