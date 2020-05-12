@@ -32,7 +32,7 @@ class Kernel extends ConsoleKernel
             Artisan::call("migrate:rollback");
             Artisan::call("migrate");
             Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
-        })->dailyAt('7:00');
+        })->dailyAt('7:50');
 
         $schedule->call('App\Http\Controllers\HomeController@DailyEmail')->dailyAt('8:00');
     }
