@@ -63,8 +63,7 @@ class HomeController extends Controller
     public function upload(Request $request)
     {
 
-        Artisan::call("migrate:rollback");
-        Artisan::call("migrate");
+        Artisan::call("migrate:refresh");
 
         Excel::import(new BocImport, $request->file);
 
