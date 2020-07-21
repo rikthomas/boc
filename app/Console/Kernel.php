@@ -29,8 +29,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->call(function () {
-            Artisan::call("migrate:rollback");
-            Artisan::call("migrate");
+            Artisan::call("migrate:refresh");
             Excel::import(new BocImport, storage_path('UCLHNHS.xls'));
         })->dailyAt('7:50');
 
