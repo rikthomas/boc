@@ -6,7 +6,7 @@ Data is pulled from the BOC Online Delivery Planning Center. This is automated a
 
 <pre><code>https://dpc.boc.com/public/Welcome.aspx 
 type //*[@id="username"] as UCLHNHS
-type //*[@id="passwd"] as Oxygen@2
+type //*[@id="passwd"] as xxxxxxx
 click //*[@id="submit1"]
 click //*[@id="PageContent"]/form/div[1]/div/input
 click /html/body/div[4]/div/div/div[1]/div/input
