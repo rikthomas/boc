@@ -117,6 +117,8 @@ class HomeController extends Controller
             tank_b b4 ON b4.id = b3.id + 1"
         ))->filter(function ($item) {
             return $item->minutes >= 20;
+        })->filter(function ($item) {
+            return $item->real_flow <= 5000;
         })->slice(1);
 
         $nhnn = collect(DB::select(
@@ -133,6 +135,8 @@ class HomeController extends Controller
             nhnn b2 ON b2.id = b1.id + 1"
         ))->filter(function ($item) {
             return $item->flow > 0 && $item->minutes >= 20;
+        })->filter(function ($item) {
+            return $item->flow <= 3000;
         })->slice(1);
 
         return [$main_tank, $nhnn];
